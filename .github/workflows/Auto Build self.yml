@@ -71,7 +71,7 @@ jobs:
           files: |
             TVBoxOSC/apk/*
             TVBoxOSC/${{ env.commitS }}-source.zip
-            TVBoxOSC/${{ github.workspace }}/apk/
+            TVBoxOSC/${{ github.workspace }}/apk/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
