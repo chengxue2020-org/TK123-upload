@@ -17,7 +17,7 @@ jobs:
           fetch-depth: 0
       - name: Check New Commit
         run: |
-          upstreamCode=https://github.com/chengxue2020-org/TK123
+          upstreamCode=https://github.com/chengxue2020-org/TK123-upload
           echo "upstreamCode=$upstreamCode" >> $GITHUB_ENV
           commit=$(curl -sL $upstreamCode/commits/main |grep -o '/chengxue2020-org/TK123/commit/[a-z0-9]\+' |head -1 | cut -d\/ -f5)
           if ! git log --oneline |grep -q "$commit"; then
@@ -46,12 +46,6 @@ jobs:
           sed -i '$a\RELEASE_KEY_ALIAS=TVBoxOSC'            ./gradle.properties
           sed -i '$a\RELEASE_STORE_PASSWORD=TVBoxOSC'       ./gradle.properties
           sed -i '$a\RELEASE_KEY_PASSWORD=TVBoxOSC'         ./gradle.properties
-      - name: Build Release With Gradle
-        if: ${{ env.commit }}
-        working-directory: TVBoxOSC
-        run: |
-          chmod +x gradlew
-          ./gradlew assemblerelease --build-cache --parallel --daemon --warning-mode all
           
       - name: Build Debug With Gradle
         if: ${{ env.commit }}
@@ -59,19 +53,14 @@ jobs:
         run: |
           chmod +x gradlew
           ./gradlew assembledebug --build-cache --parallel --daemon --warning-mode all
-          
+
       - name: Prepare App
-        if: ${{ env.commit }}
-        working-directory: TVBoxOSC
         run: |
-          rm -rf apk/
-          mkdir -p apk/
-          for file in `find ~ -name "*release*.apk" -print`; do
-            mv "$file" apk/TVBox_takagen99_${{ env.tag }}_Release.apk
+          mkdir -p ${{ github.workspace }}/apk/
+          for file in `find ~ -name "*.apk" -print`; do
+            mv "$file" ${{ github.workspace }}/apk/
           done
-          for file in `find ~ -name "*debug*.apk" -print`; do
-            mv "$file" apk/TVBox_takagen99_${{ env.tag }}_Debug.apk
-          done
+          
       - name: Release and Upload Assets
         uses: softprops/action-gh-release@v1
         if: ${{ env.commit }}
@@ -82,5 +71,12 @@ jobs:
           files: |
             TVBoxOSC/apk/*
             TVBoxOSC/${{ env.commitS }}-source.zip
+            TVBoxOSC/${{ github.workspace }}/apk/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload App To Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: com.github.tvbox.osc.tk.frank
+          path: ${{ github.workspace }}/apk/*
